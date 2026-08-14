@@ -1,9 +1,7 @@
 # nsis-update-elevation
 
 A from-scratch, scripted reproduction rig for two findings about Electron auto-updates on
-Windows, both discovered while verifying
-[imlucas/electron-skills's differential-update runbook](https://github.com/imlucas/electron-skills/blob/main/docs/verify-windows-differential-updates.md)
-(results: [imlucas/electron-skills#8](https://github.com/imlucas/electron-skills/pull/8), merged):
+Windows:
 
 1. **electron-updater's differential ("delta") download needs a genuine multi-range HTTP
    server**, not just single-range support — the naive check most people use to verify
@@ -61,9 +59,7 @@ well-known, previously-reported gap on electron-builder's own issue tracker:
 
 `server/differential-update-test-server.mjs` implements the multi-range case correctly —
 verified against a real fixture app, it produced real savings of ~0.8–1% of the full
-installer size across several version hops (exact byte counts in
-[electron-skills#8](https://github.com/imlucas/electron-skills/pull/8)'s "Results"
-section).
+installer size across several version hops.
 
 Reproduce the failure, then the fix:
 
@@ -205,10 +201,5 @@ Being precise about this matters more than looking complete:
   that combination wasn't exercised in the same test pass as the rest. If you run it and
   it doesn't work as described, that's real information — please report back rather than
   assuming the write-up is stale.
-
-## Related
-
-- [imlucas/electron-skills#8](https://github.com/imlucas/electron-skills/pull/8) — the
-  original runbook verification this repo grew out of (merged).
 - [electron-userland/electron-builder#10085](https://github.com/electron-userland/electron-builder/pull/10085) —
   the draft upstream patch.
