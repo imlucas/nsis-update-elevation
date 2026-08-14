@@ -27,14 +27,17 @@ server/
   differential-update-test-server.mjs   the fix: real RFC 7233 multipart/byteranges support
   single-range-test-server.mjs          the failure mode: single-range only, like http-server
 scripts/                   PowerShell, see each script's comment-based help (Get-Help -Full)
-  Install-Ebx.ps1
+  Build-ElectronBuilder.ps1  clones + compiles electron-builder from source at an exact commit
   Build-Version.ps1
   Start-UpdateServer.ps1
   Test-InstallAcl.ps1
   Get-DiffUpdVersion.ps1
-  Build-PatchedElectronBuilder.ps1
   Invoke-FullRepro.ps1     guided top-level walkthrough of everything below
 ```
+
+Every build in this repo goes through electron-builder compiled from source at an exact
+pinned commit — no packaged binary shortcut anywhere — so any two builds you compare
+differ by exactly the commits you chose between them, and nothing else.
 
 ## Finding 1: differential downloads need multi-range support
 
@@ -64,14 +67,16 @@ installer size across several version hops.
 Reproduce the failure, then the fix:
 
 ```powershell
-.\scripts\Install-Ebx.ps1
-.\scripts\Build-Version.ps1 -Version 1.0.0
-.\scripts\Build-Version.ps1 -Version 1.0.1
+.\scripts\Build-ElectronBuilder.ps1 -Branch c0b8235d7f86d90ffe7218765115b6948b180739
+$builder = '.\electron-builder\packages\electron-builder\cli.js'   # path it printed
+
+.\scripts\Build-Version.ps1 -Version 1.0.0 -BuilderCommand $builder
+.\scripts\Build-Version.ps1 -Version 1.0.1 -BuilderCommand $builder
 .\scripts\Start-UpdateServer.ps1 -Variant SingleRange
 # install 1.0.0 (redirect to C:\Program Files\DiffUpd), then launch it -> full download,
 # not differential, even though the naive curl -r check would have passed.
 
-.\scripts\Build-Version.ps1 -Version 1.0.2
+.\scripts\Build-Version.ps1 -Version 1.0.2 -BuilderCommand $builder
 .\scripts\Start-UpdateServer.ps1 -Variant MultiRange
 # launch the app again -> genuinely differential this time; check the server's job log.
 ```
@@ -158,8 +163,8 @@ registry cleanup step between attempts because a partial/corrupted state from on
 will confuse the next one. Budget for several UAC-click round trips.
 
 ```powershell
-.\scripts\Build-PatchedElectronBuilder.ps1
-$builder = 'C:\...\electron-builder\packages\electron-builder\cli.js'   # path it printed
+.\scripts\Build-ElectronBuilder.ps1 -Destination .\eb-patched -Branch nsis-skip-unnecessary-elevation -Remote https://github.com/imlucas/electron-builder.git
+$builder = '.\eb-patched\packages\electron-builder\cli.js'   # path it printed
 
 # 1. Fresh install through the PATCHED builder + the ACL-loosening hook (build/installer.nsh
 #    is already wired into fixture\eb.yml's nsis.include), so identities/GUIDs stay

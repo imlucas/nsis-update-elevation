@@ -10,17 +10,18 @@
   Defaults to ..\fixture relative to this script.
 
 .PARAMETER BuilderCommand
-  How to invoke electron-builder. Either the path to ebx.exe (stock builder), or the
-  path to a locally-built electron-builder cli.js (see Build-PatchedElectronBuilder.ps1)
-  to exercise the electron-userland/electron-builder#10085 patch. Defaults to
-  "$env:USERPROFILE\bin\ebx.exe".
+  Path to a locally-built electron-builder cli.js (see Build-ElectronBuilder.ps1),
+  pinned to whichever commit/branch you built. Run Build-ElectronBuilder.ps1 first;
+  defaults to the cli.js at its default output location (..\electron-builder next to
+  this repo).
 
 .EXAMPLE
+  .\Build-ElectronBuilder.ps1 -Branch c0b8235d7f86d90ffe7218765115b6948b180739
   .\Build-Version.ps1 -Version 1.0.1
 
 .EXAMPLE
-  # Build with the locally patched electron-builder instead of stock ebx
-  .\Build-Version.ps1 -Version 1.0.6 -BuilderCommand 'C:\src\electron-builder\packages\electron-builder\cli.js'
+  # Build with the patched electron-builder instead of the baseline
+  .\Build-Version.ps1 -Version 1.0.6 -BuilderCommand '..\eb-patched\packages\electron-builder\cli.js'
 #>
 param(
   [Parameter(Mandatory = $true)]
@@ -28,7 +29,7 @@ param(
 
   [string]$FixtureDir = (Join-Path (Split-Path $PSScriptRoot -Parent) 'fixture'),
 
-  [string]$BuilderCommand = (Join-Path $env:USERPROFILE 'bin\ebx.exe')
+  [string]$BuilderCommand = (Join-Path (Split-Path $PSScriptRoot -Parent) 'electron-builder\packages\electron-builder\cli.js')
 )
 
 $pkgPath = Join-Path $FixtureDir 'package.json'
@@ -43,11 +44,7 @@ try {
     npm install
   }
 
-  if ($BuilderCommand -like '*.js') {
-    node $BuilderCommand --config eb.yml --win nsis --x64 --publish never
-  } else {
-    & $BuilderCommand --config eb.yml --win nsis --x64 --publish never
-  }
+  node $BuilderCommand --config eb.yml --win nsis --x64 --publish never
 }
 finally {
   Pop-Location

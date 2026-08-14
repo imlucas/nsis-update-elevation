@@ -1,4 +1,4 @@
-appId: dev.ebx.diffupd
+appId: com.example.diffupd
 productName: DiffUpd
 electronVersion: 37.2.4
 nsis:
