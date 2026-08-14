@@ -1,0 +1,11 @@
+appId: dev.ebx.diffupd
+productName: DiffUpd
+electronVersion: 37.2.4
+nsis:
+  oneClick: false
+  perMachine: false # the exact configuration under test
+  allowToChangeInstallationDirectory: true
+  include: build/installer.nsh
+publish:
+  - provider: generic
+    url: http://127.0.0.1:8099
